@@ -116,11 +116,10 @@ echo 'nameserver 208.67.222.123' | sudo tee /etc/resolv.conf
 
 Ces points sont la cause des principaux blocages rencontrés. À relire avant de débugger pendant des heures.
 
-| # | Piège | Symptôme | Solution |
-|---|-------|----------|----------|
-| 1 | **`policy accept` au lieu de `policy drop`** | Le pare-feu laisse tout passer (ex : ping LAN→DMZ marche alors qu'il ne devrait pas) | Mettre `policy drop` sur les 3 chaînes de filtrage (`input`, `forward`, `output`). **Ne pas** toucher aux chaînes `nat` (leur `policy accept` est normal). |
-| 2 | **`/etc/sysctl.conf` inexistant** | Pas de fichier à éditer pour le forwarding | Utiliser un drop-in : `/etc/sysctl.d/99-ipforward.conf`. |
-| 3 | **`dns-nameserver` (singulier)** dans `interfaces` | DNS non configuré | Le mot-clé est `dns-nameservers` (**pluriel**) **et** nécessite le paquet `resolvconf`. Le plus simple : éditer `/etc/resolv.conf` directement. |
+Piège Symptôme Solution
+1. **`policy accept` au lieu de `policy drop`** Le pare-feu laisse tout passer (ex : ping LAN→DMZ marche alors qu'il ne devrait pas)  Mettre `policy drop` sur les 3 chaînes de filtrage (`input`, `forward`, `output`). **Ne pas** toucher aux chaînes `nat` (leur `policy accept` est normal).
+2. **`/etc/sysctl.conf` inexistant** Pas de fichier à éditer pour le forwarding Utiliser un drop-in : `/etc/sysctl.d/99-ipforward.conf`. 
+3. **`dns-nameserver` (singulier)** dans `interfaces` DNS non configuré Le mot-clé est `dns-nameservers` (**pluriel**) **et** nécessite le paquet `resolvconf`. Le plus simple : éditer `/etc/resolv.conf` directement.
 | 4 | **`name-server` (avec tiret)** dans `resolv.conf` | « no servers could be reached », fallback sur `::1` / `127.0.0.1` | Le mot-clé est `nameserver` (**un seul mot, sans tiret**). |
 | 5 | **Passerelle du serveur DMZ cassée** (`169.254.x` / pas de `gateway`) | Le TCP se connecte (`connected`) mais la **réponse HTTP ne revient jamais** (« awaiting response… ») | Définir `gateway 172.16.0.245` (= IP réelle du firewall côté DMZ). Cohérence indispensable : `.245` ≠ `.254`. |
 | 6 | **DNAT : mauvais critère dans `forward`** | Le DNAT 61337→22 « ne marche pas » | Le DNAT (`prerouting`) s'exécute **avant** `forward` : la destination y est **déjà traduite**. Filtrer sur `ip daddr 172.16.0.10 tcp dport 22` (le port **22**, pas 61337). |
