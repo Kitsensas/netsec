@@ -67,8 +67,8 @@ LAN = 192.168.1.0/24 :
 - Client LAN : 192.168.1.10/24, passerelle 192.168.1.254, DNS 208.67.222.123
 
 DMZ = 172.16.0.0/16 :
-- Firewall enp0s9 : 172.16.0.245/16
-- Serveur DMZ : 172.16.0.10/16, passerelle 172.16.0.245, DNS 208.67.222.123
+- Firewall enp0s9 : 172.16.0.254/16
+- Serveur DMZ : 172.16.0.10/16, passerelle 172.16.0.254, DNS 208.67.222.123
 
 Le DNS 208.67.222.123 est OpenDNS FamilyShield, qui bloque certains sites malicieux
 (ex. internetbadguys.com).
@@ -87,7 +87,7 @@ Firewall, /etc/network/interfaces :
 
     auto enp0s9
     iface enp0s9 inet static
-        address 172.16.0.245/16
+        address 172.16.0.254/16
 
 Serveur DMZ, /etc/network/interfaces :
 
@@ -97,7 +97,7 @@ Serveur DMZ, /etc/network/interfaces :
     auto enp0s3
     iface enp0s3 inet static
         address 172.16.0.10/16
-        gateway 172.16.0.245
+        gateway 172.16.0.254
 
 Client LAN, DNS force directement dans /etc/resolv.conf :
 
@@ -109,8 +109,8 @@ Pieges :
   paquet resolvconf. Le plus simple = ecrire dans /etc/resolv.conf le mot `nameserver`
   (UN SEUL mot, sans tiret : pas "name-server").
 - Coherence de la passerelle DMZ : le serveur DMZ doit avoir gateway = l'IP REELLE du
-  firewall cote DMZ (172.16.0.245), sinon le TCP se connecte mais la reponse ne revient
-  jamais ("awaiting response..."). Attention .245 != .254.
+  firewall cote DMZ (172.16.0.254), sinon le TCP se connecte mais la reponse ne revient
+  jamais ("awaiting response..."). Attention .254 != .254.
 
 
 # 3. Squelette de depart
@@ -356,7 +356,7 @@ WAN -> DMZ, depuis le client externe (via l'IP WAN du firewall) :
 ANY -> Firewall :
 
     ping 192.168.1.254                   # LAN
-    ping 172.16.0.245                    # DMZ
+    ping 172.16.0.254                    # DMZ
     ping <IP_WAN>                        # externe
     traceroute -I <IP_firewall>          # ICMP -> OK
     traceroute <IP_firewall>             # UDP -> "* * *" (normal)
@@ -407,7 +407,7 @@ Politique par defaut sur les 3 chaines de filtrage : drop.
 - dns-nameserver (singulier) dans interfaces, ou name-server (avec tiret) dans
   resolv.conf -> aucune resolution. Bon mot-cle : nameserver (un seul mot).
 - Passerelle du serveur DMZ cassee (169.254.x) -> TCP connecte mais reponse jamais
-  recue. Definir gateway 172.16.0.245.
+  recue. Definir gateway 172.16.0.254.
 - DNAT : filtrer dans forward sur le port traduit (22) et l'IP interne, pas sur 61337.
 - SSH absent du firewall + output drop -> apt impossible : ouvrir la sortie
   temporairement puis recharger.
